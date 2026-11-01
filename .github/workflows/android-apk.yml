@@ -50,11 +50,33 @@ jobs:
           chmod +x build.sh include/*.sh
           ./build.sh --arch arm64 --jobs "$(nproc)"
 
+      # The post-processing shaders (assets/android_omwfx) are generated on the upstream
+      # author's Windows machine and never committed; take them from the latest official
+      # release APK. verifyOpenMwPayload also pins that machine's exact libopenmw.so hash,
+      # which a CI build can never match, so it is skipped (the files it lists are checked here).
+      - name: Shaders from the official release
+        working-directory: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          D=app/src/main/assets/android_omwfx
+          mkdir -p "$D" /tmp/rel
+          gh release download -R Andiweli/OpenMW-Android -p '*.apk' -D /tmp/rel
+          ls -l /tmp/rel
+          for apk in /tmp/rel/*.apk; do unzip -o -j -q "$apk" 'assets/android_omwfx/*' -d "$D" || true; done
+          ls -l "$D"
+          for f in gateh_bloom051 godrays_android_051_depthfixed_vivid lensflare_android_051_rayocc \
+                   rainlens_android_051_v12_dense wetworld_android_051_weather; do
+            test -s "$D/$f.omwfx" || { echo "missing $f.omwfx"; exit 1; }
+          done
+          test -s app/src/main/jniLibs/arm64-v8a/libopenmw.so
+          test -s app/src/main/assets/libopenmw/openmw/defaults.bin
+
       - name: APK
         working-directory: source
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon assembleMainlineDebug
+          ./gradlew --no-daemon assembleMainlineDebug -x verifyOpenMwPayload
 
       - uses: actions/upload-artifact@v4
         with:
