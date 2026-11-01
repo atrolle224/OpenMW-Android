@@ -71,6 +71,16 @@ jobs:
           done
           test -s app/src/main/jniLibs/arm64-v8a/libopenmw.so
           test -s app/src/main/assets/libopenmw/openmw/defaults.bin
+          test -s app/src/main/assets/libopenmw/openmw/openmw.base.cfg
+
+      # Two shader fixes the launcher checks for that buildscripts/patches does not apply
+      # (water UVs at any resolution, no fog on the local map), then the launcher's own
+      # runtime checks, so an APK that would refuse to start fails here instead.
+      - name: Runtime shaders
+        run: |
+          python3 ci/patch_runtime_shaders.py source/app/src/main/assets/libopenmw/resources
+          python3 ci/check_runtime_shaders.py source/app/src/main/java/ui/activity/MainActivity.kt \
+            source/app/src/main/assets/libopenmw/resources
 
       - name: APK
         working-directory: source

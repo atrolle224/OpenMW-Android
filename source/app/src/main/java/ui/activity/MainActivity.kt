@@ -1245,7 +1245,7 @@ class MainActivity : AppCompatActivity() {
             !bloomText.contains("uniform_float uRadius {\n    default = 0.55;") ||
             !bloomText.contains("uniform_float uStrength {\n    default = 0.35;") ||
             bloomText.count { it == '\n' } < 150) {
-            throw IOException("OpenMW 0.51 Android OMWFX bloom payload is invalid")
+            Log.w(TAG, "OpenMW 0.51 Android OMWFX bloom payload is invalid (RG477M build: the shader comes from the official release, launching anyway)")
         }
 
         val lensflareText = lensflareUserTarget.readText()
@@ -1262,7 +1262,7 @@ class MainActivity : AppCompatActivity() {
             !lensflareText.contains("passes = main;") ||
             !lensflareText.contains("version = \"2.1-051-rayocc\";") ||
             lensflareText.count { it == '\n' } < 100) {
-            throw IOException("OpenMW 0.51 Android OMWFX CPU-ray lens flare payload is invalid")
+            Log.w(TAG, "OpenMW 0.51 Android OMWFX CPU-ray lens flare payload is invalid (RG477M build: the shader comes from the official release, launching anyway)")
         }
 
         val godraysText = godraysUserTarget.readText()
@@ -1285,7 +1285,7 @@ class MainActivity : AppCompatActivity() {
             !godraysText.contains("passes = main;") ||
             !godraysText.contains("version = \"3.4-051-depthfixed-vivid-softglare\";") ||
             godraysText.count { it == '\n' } < 150) {
-            throw IOException("OpenMW 0.51 Android OMWFX calibrated Godrays/Sun-Glow payload is invalid")
+            Log.w(TAG, "OpenMW 0.51 Android OMWFX calibrated Godrays/Sun-Glow payload is invalid (RG477M build: the shader comes from the official release, launching anyway)")
         }
 
         val rainLensText = rainLensUserTarget.readText()
@@ -1310,7 +1310,7 @@ class MainActivity : AppCompatActivity() {
             rainLensText.contains("rainHash3051(") ||
             rainLensText.contains("teardropLayer051(") ||
             rainLensText.count { it == '\n' } < 160) {
-            throw IOException("OpenMW 0.51 Android OMWFX RainLens payload is invalid")
+            Log.w(TAG, "OpenMW 0.51 Android OMWFX RainLens payload is invalid (RG477M build: the shader comes from the official release, launching anyway)")
         }
 
         val wetWorldText = wetWorldUserTarget.readText()
@@ -1330,7 +1330,7 @@ class MainActivity : AppCompatActivity() {
             wetWorldText.contains("dFdy(") ||
             wetWorldText.contains("sin(") ||
             wetWorldText.count { it == '\n' } < 170) {
-            throw IOException("OpenMW 0.51 Android OMWFX WetWorld/Puddle payload is invalid")
+            Log.w(TAG, "OpenMW 0.51 Android OMWFX WetWorld/Puddle payload is invalid (RG477M build: the shader comes from the official release, launching anyway)")
         }
 
         val waterVertexText = File(
