@@ -155,7 +155,19 @@ class ModsCollection(
                 blacklist.add("Siege at Firemoth.esp")
             }
 
+            // RG477M build: the Groundcovers tab only offers files that can be groundcover.
+            // Masters, scripts and the bundled load order's regular plugins (none of them is
+            // grass) stay off it, so they cannot be loaded a second time as groundcover.
+            val notGroundcover = if (type == ModType.Groundcover)
+                preset.Rg477mPreset.order(db.appContext)?.plugins
+                    ?.mapTo(mutableSetOf()) { it.lowercase(Locale.ROOT) }.orEmpty()
+            else emptySet()
+
             modFiles?.forEach {
+                if (type == ModType.Groundcover && (
+                        it.extension.lowercase(Locale.ROOT) in setOf("esm", "omwscripts", "omwgame") ||
+                        it.name.lowercase(Locale.ROOT) in notGroundcover))
+                    return@forEach
                 if (!blacklist.contains(it.name)) {
                     fsNames.add(it.name)
                 }
