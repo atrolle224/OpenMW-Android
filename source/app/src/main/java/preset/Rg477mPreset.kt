@@ -119,6 +119,32 @@ object Rg477mPreset {
         }
     }
 
+    /**
+     * The frame rate limit to write into settings.cfg: the one chosen in Settings, but never
+     * above the refresh rate the game will run at (a 120 limit on a 90 Hz screen judders).
+     * "Highest available" also respects a system cap, such as the RG477M Toolkit's 90 Hz
+     * (Settings.System peak_refresh_rate), which stops apps from asking for 120 Hz.
+     */
+    fun frameLimit(activity: Activity, prefs: SharedPreferences): String {
+        val chosen = prefs.getString("gs_framerate_limit", "60").orEmpty()
+        val limit = chosen.toIntOrNull() ?: return chosen
+        if (limit <= 0)
+            return chosen
+        val hz = when (val choice = prefs.getString(PREF_REFRESH_RATE, "max")) {
+            "max" -> {
+                val peak = try {
+                    android.provider.Settings.System.getFloat(activity.contentResolver, "peak_refresh_rate", 0f)
+                } catch (e: Exception) { 0f }
+                val max = maxRefreshRate(activity)
+                if (peak >= 30f && peak < max) peak else max
+            }
+            "system" -> return chosen
+            else -> choice?.toFloatOrNull() ?: return chosen
+        }
+        val cap = Math.round(hz)
+        return if (limit > cap) cap.toString().also { Log.i(TAG, "frame rate limit $limit -> $it (display $hz Hz)") } else chosen
+    }
+
     /** The display's highest refresh rate in Hz (60 when it cannot be read). */
     fun maxRefreshRate(activity: Activity): Float {
         val display = displayOf(activity) ?: return 60f

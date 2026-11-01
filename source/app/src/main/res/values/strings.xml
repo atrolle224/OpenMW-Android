@@ -130,7 +130,7 @@
         <item>120</item>
     </string-array>
     <string name="pref_refresh_rate">Display Refresh Rate</string>
-    <string name="pref_refresh_rate_summary">%s. The screen\'s refresh rate while playing; match the frame rate limit to it (120 Hz with 120, or 60 Hz with 30 or 60).</string>
+    <string name="pref_refresh_rate_summary">%s. The screen\'s refresh rate while playing: 60, 90 or 120 Hz. The frame rate limit is lowered to match it when it is higher (for example 90 at 90 Hz).</string>
     <string-array name="pref_refresh_rate_entries">
         <item>Highest available</item>
         <item>120 Hz</item>

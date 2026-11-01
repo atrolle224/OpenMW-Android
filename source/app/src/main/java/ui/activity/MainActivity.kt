@@ -2436,7 +2436,7 @@ class MainActivity : AppCompatActivity() {
 
 			// Visuals graphics
                         //"antialiasing" to prefs.getString("gs_antialiasing", "0").toString(),
-                        "framerate limit" to prefs.getString("gs_framerate_limit", "60").toString(),
+                        "framerate limit" to preset.Rg477mPreset.frameLimit(this@MainActivity, prefs),
 
 			// Visuals shaders
                         "auto use object normal maps" to if(prefs.getBoolean("gs_auto_use_object_normal_maps", false)) "true" else "false",
