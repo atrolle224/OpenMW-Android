@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">OpenMW</string>
+    <string name="app_name">OpenMW 477M</string>
     <string-array name="pref_encoding_entries">
         <item>Central and Eastern European (win1250)</item>
         <item>Cyrillic (win1251)</item>
@@ -116,12 +116,34 @@
     <string-array name="pref_framerate_limit_entries">
         <item>20</item>
         <item>30</item>
+        <item>40</item>
         <item>60</item>
+        <item>90</item>
+        <item>120</item>
     </string-array>
     <string-array name="pref_framerate_limit_values">
         <item>20</item>
         <item>30</item>
+        <item>40</item>
         <item>60</item>
+        <item>90</item>
+        <item>120</item>
+    </string-array>
+    <string name="pref_refresh_rate">Display Refresh Rate</string>
+    <string name="pref_refresh_rate_summary">%s. The screen\'s refresh rate while playing; match the frame rate limit to it (120 Hz with 120, or 60 Hz with 30 or 60).</string>
+    <string-array name="pref_refresh_rate_entries">
+        <item>Highest available</item>
+        <item>120 Hz</item>
+        <item>90 Hz</item>
+        <item>60 Hz</item>
+        <item>System default</item>
+    </string-array>
+    <string-array name="pref_refresh_rate_values">
+        <item>max</item>
+        <item>120</item>
+        <item>90</item>
+        <item>60</item>
+        <item>system</item>
     </string-array>
     <string-array name="pref_physicsFPS2_entries">
         <item>20</item>

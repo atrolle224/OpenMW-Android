@@ -21,6 +21,7 @@
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/category_performance">
         <ListPreference android:key="gs_framerate_limit" android:title="@string/pref_framerate_limit" android:dialogTitle="@string/pref_framerate_limit" android:entries="@array/pref_framerate_limit_entries" android:entryValues="@array/pref_framerate_limit_values" android:defaultValue="@string/pref_framerate_limit_default" android:summary="@string/gs_framerate_limit_summary" />
+        <ListPreference android:key="pref_refresh_rate" android:title="@string/pref_refresh_rate" android:dialogTitle="@string/pref_refresh_rate" android:entries="@array/pref_refresh_rate_entries" android:entryValues="@array/pref_refresh_rate_values" android:defaultValue="max" android:summary="@string/pref_refresh_rate_summary" />
         <CheckBoxPreference android:key="pref_nohighp" android:title="@string/pref_nohighp" android:summary="@string/pref_nohighp_summary" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_graphics">

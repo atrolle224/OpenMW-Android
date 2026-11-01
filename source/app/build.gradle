@@ -743,7 +743,9 @@ android {
         // Both flavors intentionally use the same installed package name. Google Play
         // can therefore serve the appropriate artifact per form factor while the
         // shared OpenMW user-data path remains stable.
-        applicationId "com.ast.openmw"
+        // RG477M build: its own package, so it installs beside the official app and starts
+        // with an empty mod list (which is when the bundled load order is applied).
+        applicationId "com.ast.openmw.rg477m"
 
         versionCode openMwVersionCode
         versionName calculateVersion()

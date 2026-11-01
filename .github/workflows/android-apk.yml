@@ -1,0 +1,63 @@
+# Builds the OpenMW 477M APK: the native engine and its libraries (source/buildscripts/build.sh,
+# arm64 only), then the launcher (Gradle, mainline debug, debug-signed so it installs as is).
+# A first build compiles everything (Boost, ICU, FFmpeg, OSG, OpenMW, ...); the cache below
+# keeps those for later builds that only change the launcher.
+name: Android APK
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**/*.md', 'images/**']
+  workflow_dispatch:
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Host tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential gcc-multilib g++-multilib cmake ninja-build \
+            pkg-config autoconf automake libtool gettext-base unzip zip wget curl python3 nasm yasm \
+            >/dev/null
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Restore the native build
+        uses: actions/cache@v4
+        with:
+          path: |
+            source/buildscripts/downloads
+            source/buildscripts/toolchain
+            source/buildscripts/build
+            source/buildscripts/prefix
+          key: native-arm64-${{ hashFiles('source/buildscripts/CMakeLists.txt', 'source/buildscripts/patches/**', 'source/buildscripts/include/**', 'source/buildscripts/build.sh') }}
+          restore-keys: native-arm64-
+
+      - name: Native engine (arm64)
+        working-directory: source/buildscripts
+        run: |
+          chmod +x build.sh include/*.sh
+          ./build.sh --arch arm64 --jobs "$(nproc)"
+
+      - name: APK
+        working-directory: source
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleMainlineDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openmw-477m-arm64
+          path: source/app/build/outputs/apk/mainline/debug/*.apk
+          if-no-files-found: error
