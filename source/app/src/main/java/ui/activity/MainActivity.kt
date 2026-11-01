@@ -135,9 +135,12 @@ class MainActivity : AppCompatActivity() {
         skipGuiOverrideRequested = false
         skipGuiVolumeOverrideHeld = false
         skipGuiDirectLaunchActive = false
+        // RG477M build: frontends (Daijishou) can start the game straight away with
+        // "--ez rg477m.autostart true", the same path as the Skip GUI setting.
+        val autostartRequested = intent?.getBooleanExtra(EXTRA_AUTOSTART, false) == true
         skipGuiAutoLaunchPending =
             savedInstanceState == null &&
-                prefs.getBoolean("pref_skip_gui", false) &&
+                (prefs.getBoolean("pref_skip_gui", false) || autostartRequested) &&
                 !bugsnagConsentMissing
 
         PermissionHelper.getWriteExternalStoragePermission(this@MainActivity)
@@ -3111,6 +3114,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
+        const val EXTRA_AUTOSTART = "rg477m.autostart"
         private const val TAG = "OpenMW-Launcher"
 
         // v11.x shared custom-resolution state. MouseCursor and GameActivity
