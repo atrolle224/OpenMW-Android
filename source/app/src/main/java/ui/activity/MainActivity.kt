@@ -621,8 +621,19 @@ class MainActivity : AppCompatActivity() {
 
         // try to read the files
         try {
-            base = File(Constants.OPENMW_BASE_CFG).readLines()
+            // openmw.base.cfg is OpenMW's own openmw.cfg followed by app/openmw.base.cfg, and
+            // both set user-data (and may set encoding): OpenMW 0.51 stops with "option
+            // 'user-data' cannot be specified more than once". Single-value options keep
+            // only their last line.
+            val singleValue = setOf("user-data", "encoding", "no-sound", "resources", "data-local")
+            val baseLines = File(Constants.OPENMW_BASE_CFG).readLines()
                 .filterNot { it.trim() == "data=\"specify-me!\"" }
+            val keyOf = { line: String -> line.substringBefore('=', "").trim() }
+            base = baseLines
+                .filterIndexed { index, line ->
+                    val key = keyOf(line)
+                    key !in singleValue || baseLines.subList(index + 1, baseLines.size).none { keyOf(it) == key }
+                }
                 .joinToString("\n", postfix = "\n")
             // TODO: support user custom options
             val fallbackText = File(Constants.OPENMW_FALLBACK_CFG).readText()
