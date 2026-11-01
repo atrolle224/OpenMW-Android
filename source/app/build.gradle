@@ -774,6 +774,17 @@ android {
         jvmTarget = '17'
     }
 
+    // RG477M build: one fixed signing key in the repository, so each new CI build installs
+    // over the previous one (the default debug key is new on every CI runner).
+    signingConfigs {
+        rg477m {
+            storeFile file('rg477m-debug.keystore')
+            storePassword 'android'
+            keyAlias 'rg477m'
+            keyPassword 'android'
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -783,6 +794,7 @@ android {
             // Deliberately no applicationIdSuffix. Debug and release both use
             // com.ast.openmw, so Android gives both the same app-specific data path.
             debuggable true
+            signingConfig signingConfigs.rg477m
         }
     }
 
