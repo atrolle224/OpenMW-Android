@@ -80,7 +80,7 @@ object MomwList {
             val target = File(Constants.USER_CONFIG, "settings.cfg")
             target.parentFile?.mkdirs()
             target.writeText(merge(if (target.isFile) target.readLines() else emptyList(), settings.readLines()))
-            prefs.edit().putString(PREF_SETTINGS_STAMP, stamp(settings)).apply()
+            groundcoverPrefs(ctx, settings).putString(PREF_SETTINGS_STAMP, stamp(settings)).apply()
             Log.i(TAG, "settings from $settings")
         }
 
@@ -97,6 +97,28 @@ object MomwList {
                 Log.w(TAG, "could not install $navmesh")
             }
         }
+    }
+
+    /**
+     * The launcher writes [Groundcover] from its own preferences on every start, so the
+     * list's grass is carried into them: on when the list has groundcover plugins.
+     */
+    private fun groundcoverPrefs(ctx: Context, settings: File): android.content.SharedPreferences.Editor {
+        val editor = PreferenceManager.getDefaultSharedPreferences(ctx).edit()
+        val values = HashMap<String, String>()
+        var section = ""
+        settings.readLines().map { it.trim() }.forEach { line ->
+            if (line.startsWith("[") && line.endsWith("]"))
+                section = line.substring(1, line.length - 1).trim()
+            else if (section.equals("Groundcover", ignoreCase = true) && line.contains('='))
+                values[line.substringBefore('=').trim().lowercase()] = line.substringAfter('=').trim()
+        }
+        val hasGrass = cfg(ctx)?.let { file -> lines(file).any { it.startsWith("groundcover=") } } ?: false
+        editor.putBoolean("gs_groundcover_enabled", values["enabled"]?.equals("true", ignoreCase = true) ?: hasGrass)
+        values["density"]?.toFloatOrNull()?.let { editor.putString("gs_groundcover_density", it.coerceIn(0f, 1f).toString()) }
+        values["rendering distance"]?.toFloatOrNull()?.let { editor.putString("gs_groundcover_rendering_distance", it.toString()) }
+        values["point lighting"]?.let { editor.putBoolean("gs_groundcover_point_lighting", it.equals("true", ignoreCase = true)) }
+        return editor
     }
 
     private fun stamp(file: File) = "${file.length()}:${file.lastModified()}"
