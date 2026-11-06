@@ -40,6 +40,17 @@ object MomwList {
             "vsync mode", "framerate limit", "screen", "minimize on focus loss"),
         "Window" to null,
         "Input" to null,
+        // the launcher's Shadows and shader preset settings own these on Android
+        "Shadows" to null,
+        "Post Processing" to null,
+    )
+
+    // PC-strength values from a list, lowered for a handheld GPU
+    private val handheldSettings = listOf(
+        Triple("General", "anisotropy", "4"),
+        Triple("Water", "reflection detail", "1"),
+        Triple("Water", "refraction", "false"),
+        Triple("Water", "rtt size", "512"),
     )
 
     fun folder(ctx: Context): File = File(ModsPaths.gameRoot(ctx), "momw")
@@ -79,7 +90,10 @@ object MomwList {
         if (settings.isFile && prefs.getString(PREF_SETTINGS_STAMP, "") != stamp(settings)) {
             val target = File(Constants.USER_CONFIG, "settings.cfg")
             target.parentFile?.mkdirs()
-            target.writeText(merge(if (target.isFile) target.readLines() else emptyList(), settings.readLines()))
+            val merged = merge(if (target.isFile) target.readLines() else emptyList(), settings.readLines())
+                .trimEnd('\n').lines().toMutableList()
+            handheldSettings.forEach { (section, key, value) -> set(merged, section, key, value) }
+            target.writeText(merged.joinToString("\n", postfix = "\n"))
             groundcoverPrefs(ctx, settings).putString(PREF_SETTINGS_STAMP, stamp(settings)).apply()
             Log.i(TAG, "settings from $settings")
         }
@@ -121,7 +135,7 @@ object MomwList {
         return editor
     }
 
-    private fun stamp(file: File) = "${file.length()}:${file.lastModified()}"
+    private fun stamp(file: File) = "${file.length()}:${file.lastModified()}:h1"
 
     /** [base] with every key of [list] set, section by section, except [skippedSettings]. */
     private fun merge(base: List<String>, list: List<String>): String {
