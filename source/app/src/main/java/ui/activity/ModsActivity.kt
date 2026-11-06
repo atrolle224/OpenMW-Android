@@ -48,6 +48,8 @@ class ModsActivity : AppCompatActivity() {
 
         setSupportActionBar(findViewById(R.id.mods_toolbar))
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        if (mods.MomwList.cfg(this) != null)
+            supportActionBar?.subtitle = getString(R.string.mods_momw_in_use)
 
         val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
         val flipper = findViewById<ViewFlipper>(R.id.flipper)

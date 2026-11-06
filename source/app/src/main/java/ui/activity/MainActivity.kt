@@ -673,6 +673,12 @@ class MainActivity : AppCompatActivity() {
                 append(fallback)
                 append('\n')
 
+                // a modding-openmw.com list from the game folder replaces the mod manager
+                val momw = mods.MomwList.cfg(this@MainActivity)
+                if (momw != null) {
+                    mods.MomwList.lines(momw).forEach { append(it).append('\n') }
+                } else {
+
                 resources.mods
                     .filter { it.enabled && ModsPaths.fileExistsIn(it.filename, activeDataFilesList) }
                     .forEach { append("fallback-archive=${it.filename}\n") }
@@ -693,6 +699,7 @@ class MainActivity : AppCompatActivity() {
                 groundcovers.mods
                     .filter { it.enabled && ModsPaths.fileExistsIn(it.filename, activeDataFilesList) }
                     .forEach { append("groundcover=${it.filename}\n") }
+                }
 
                 // Last, so it is not the data= line startGame() rewrites.
                 val handheldMode = PreferenceManager.getDefaultSharedPreferences(this@MainActivity)
@@ -2287,6 +2294,8 @@ class MainActivity : AppCompatActivity() {
                 if (!inst.convertIni(prefs.getString("pref_encoding", GameInstaller.DEFAULT_CHARSET_PREF)!!)) {
                     throw IOException("Failed to convert Morrowind.ini into openmw.fallback.cfg")
                 }
+
+                mods.MomwList.installUserFiles(this)
 
                 if (!generateOpenmwCfg()) {
                     throw IOException("Failed to generate openmw.cfg")

@@ -4,6 +4,7 @@
         <ListPreference android:key="pref_encoding" android:summary="%s" android:title="@string/pref_encoding" android:dialogTitle="@string/pref_encoding" android:entries="@array/pref_encoding_entries" android:entryValues="@array/pref_encoding_values" android:defaultValue="@string/pref_encoding_default" />
         <Preference android:key="game_files" android:title="@string/game_files" />
         <Preference android:title="@string/mods" android:key="pref_mods" android:summary="@string/pref_mods_summary" />
+        <CheckBoxPreference android:key="pref_momw_list" android:title="@string/pref_momw_list_title" android:summary="@string/pref_momw_list_none" android:defaultValue="true" />
         <Preference android:key="pref_game_settings" android:title="@string/pref_game_settings_title" android:summary="@string/pref_game_settings_summary" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_ui">

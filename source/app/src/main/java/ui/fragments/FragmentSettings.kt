@@ -134,6 +134,14 @@ class FragmentSettings : PreferenceFragment(), OnSharedPreferenceChangeListener 
             true
         }
 
+        mods.MomwList.describe(activity).let { list ->
+            findPreference("pref_momw_list")?.apply {
+                isEnabled = list != null
+                summary = if (list != null) getString(R.string.pref_momw_list_on, list)
+                          else getString(R.string.pref_momw_list_none)
+            }
+        }
+
         findPreference("pref_mods").setOnPreferenceClickListener {
             // Just prevent crash here if data files are not selected
             val sharedPref = preferenceScreen.sharedPreferences

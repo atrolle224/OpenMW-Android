@@ -329,4 +329,8 @@ OpenMW by the OpenMW Team since 2008</string>
     <string name="legacy_storage_migration_failed_title">Saves not moved</string>
     <string name="legacy_storage_migration_no_space_message">Your saves and settings in\n%1$s\ncould not be moved because %2$s of free storage is needed. The old folder was not changed. Free some storage and restart OpenMW to try again.</string>
     <string name="legacy_storage_migration_failed_message">Your saves and settings in\n%1$s\ncould not be moved (%2$s). The old folder was not changed. Restart OpenMW to try again.</string>
+    <string name="pref_momw_list_title">Use the installed mod list</string>
+    <string name="pref_momw_list_none">No mod list in the game folder (momw/openmw.cfg)</string>
+    <string name="pref_momw_list_on">%1$s. The Mods screen is not used while this is on.</string>
+    <string name="mods_momw_in_use">Not used: the installed mod list is on (Settings)</string>
 </resources>
