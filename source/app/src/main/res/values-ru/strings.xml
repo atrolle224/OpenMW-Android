@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">OpenMW</string>
+    <string name="app_name">OpenMW Mali Mobile</string>
     <string name="general_settings">Настройка</string>
     <string name="start_game_label">Запустить игру</string>
     <string name="closeDrawer">Навигация</string>
