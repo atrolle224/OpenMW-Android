@@ -41,6 +41,7 @@ class ModsActivity : AppCompatActivity() {
     val mResourceAdapter = ModsAdapter()
     val mDirAdapter = ModsAdapter()
     val mGroundcoverAdapter = ModsAdapter()
+    private var momwMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,11 +49,13 @@ class ModsActivity : AppCompatActivity() {
 
         setSupportActionBar(findViewById(R.id.mods_toolbar))
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        if (mods.MomwList.cfg(this) != null)
-            supportActionBar?.subtitle = getString(R.string.mods_momw_in_use)
-
         val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
         val flipper = findViewById<ViewFlipper>(R.id.flipper)
+
+        mods.MomwList.cfg(this)?.let { cfg ->
+            showMomwList(cfg, tabLayout, flipper)
+            return
+        }
 
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
@@ -80,7 +83,54 @@ class ModsActivity : AppCompatActivity() {
         updateModList()
     }
 
+    /** The installed mod list, read-only, in its own load order: it replaces this screen's lists. */
+    private fun showMomwList(cfg: java.io.File, tabLayout: TabLayout, flipper: ViewFlipper) {
+        momwMode = true
+        supportActionBar?.subtitle = mods.MomwList.describe(this)
+        val lines = mods.MomwList.lines(cfg)
+        fun values(key: String) = lines.filter { it.startsWith("$key=") }
+            .map { it.substringAfter('=').trim('"') }
+        val tabs = listOf(
+            values("content"),
+            values("fallback-archive"),
+            values("data").map { it.substringAfterLast('/') },
+            values("groundcover"),
+        )
+        val ids = listOf(R.id.list_mods, R.id.list_resources, R.id.list_dirs, R.id.list_groundcovers)
+        ids.zip(tabs).forEach { (id, items) ->
+            val list = findViewById<RecyclerView>(id)
+            list.layoutManager = LinearLayoutManager(this)
+            list.adapter = ReadOnlyAdapter(items.mapIndexed { i, name -> "${i + 1}.  $name" })
+        }
+        tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab) {
+                flipper.displayedChild = tab.position
+            }
+
+            override fun onTabUnselected(tab: TabLayout.Tab) = Unit
+            override fun onTabReselected(tab: TabLayout.Tab) = Unit
+        })
+    }
+
+    private class ReadOnlyAdapter(val items: List<String>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+        override fun onCreateViewHolder(parent: android.view.ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+            val view = android.view.LayoutInflater.from(parent.context)
+                .inflate(android.R.layout.simple_list_item_1, parent, false)
+            return object : RecyclerView.ViewHolder(view) {}
+        }
+
+        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+            (holder.itemView as android.widget.TextView).text = items[position]
+        }
+
+        override fun getItemCount() = items.size
+    }
+
     override fun onDestroy() {
+        if (momwMode) {
+            super.onDestroy()
+            return
+        }
         // Persist each list before the Activity goes away. updateModList() must
         // not replace collections before dirty entries have been written.
         mPluginAdapter.collection.update()

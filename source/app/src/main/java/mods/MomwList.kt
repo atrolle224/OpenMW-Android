@@ -13,6 +13,8 @@ import android.content.Context
 import android.util.Log
 import android.preference.PreferenceManager
 import constants.Constants
+import file.GameFilesLocation
+import file.GameInstaller
 import java.io.File
 import java.io.IOException
 
@@ -56,6 +58,26 @@ object MomwList {
     )
 
     fun folder(ctx: Context): File = File(ModsPaths.gameRoot(ctx), "momw")
+
+    /** Where RG477M-Morrowind.ps1's folder goes on the device. */
+    private val defaultGameFolder = File("/storage/emulated/0/Documents/Morrowind Android")
+
+    /**
+     * Points the game folder at Documents/Morrowind Android when none usable is set and a
+     * list is there, so a copied folder plays without picking it first.
+     */
+    fun useDefaultGameFolder(prefs: android.content.SharedPreferences) {
+        if (GameInstaller(prefs.getString(GameFilesLocation.PREF_GAME_FILES, "")!!).check())
+            return
+        if (!File(defaultGameFolder, "momw/openmw.cfg").isFile || !GameInstaller(defaultGameFolder.path).check())
+            return
+        prefs.edit()
+            .putString(GameFilesLocation.PREF_GAME_FILES, defaultGameFolder.path)
+            .remove(GameFilesLocation.PREF_STORAGE_ROOT)
+            .remove(GameFilesLocation.PREF_STORAGE_ID)
+            .apply()
+        Log.i(TAG, "game folder set to $defaultGameFolder")
+    }
 
     /** The list's openmw.cfg when there is one and it is switched on, else null. */
     fun cfg(ctx: Context): File? {

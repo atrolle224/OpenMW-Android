@@ -477,6 +477,8 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        mods.MomwList.useDefaultGameFolder(prefs)
+
         // First, check that there are game files present
         val inst = GameInstaller(prefs.getString("game_files", "")!!)
         if (!inst.check()) {
@@ -504,6 +506,12 @@ class MainActivity : AppCompatActivity() {
                 }
                 .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int -> }
                 .show()
+            return
+        }
+
+        // An installed mod list brings its own load order, Morrowind.esm included.
+        if (mods.MomwList.cfg(this) != null) {
+            startGame()
             return
         }
 
