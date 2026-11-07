@@ -1,4 +1,4 @@
-# Builds the OpenMW 477M APK: the native engine and its libraries (source/buildscripts/build.sh,
+# Builds the OpenMW Mali Mobile APK: the native engine and its libraries (source/buildscripts/build.sh,
 # arm64 only), then the launcher (Gradle, mainline debug, debug-signed so it installs as is).
 # A first build compiles everything (Boost, ICU, FFmpeg, OSG, OpenMW, ...); the cache below
 # keeps those for later builds that only change the launcher.
