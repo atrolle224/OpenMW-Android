@@ -14,6 +14,7 @@ import android.util.Log
 import android.preference.PreferenceManager
 import constants.Constants
 import java.io.File
+import java.io.IOException
 
 /**
  * A modding-openmw.com list installed with umo and momw-configurator on a PC and copied to
@@ -51,6 +52,7 @@ object MomwList {
         Triple("Water", "reflection detail", "1"),
         Triple("Water", "refraction", "false"),
         Triple("Water", "rtt size", "512"),
+        Triple("Terrain", "object paging min size", "0.06"),
     )
 
     fun folder(ctx: Context): File = File(ModsPaths.gameRoot(ctx), "momw")
@@ -81,10 +83,27 @@ object MomwList {
         return "$name: $folders folders, $plugins plugins"
     }
 
+    /** The previous run's logs, in momw/logs where a file manager or PC can reach them. */
+    private fun keepLastLogs(dir: File) {
+        val logs = File(dir, "logs")
+        listOf("openmw.log", "crash.log").forEach { name ->
+            val log = File(Constants.USER_CONFIG, name)
+            try {
+                if (log.isFile) {
+                    logs.mkdirs()
+                    log.copyTo(File(logs, name), overwrite = true)
+                }
+            } catch (e: IOException) {
+                Log.w(TAG, "could not keep $name", e)
+            }
+        }
+    }
+
     /** Puts the list's settings.cfg and navmesh.db in place when they are new. */
     fun installUserFiles(ctx: Context) {
         val prefs = PreferenceManager.getDefaultSharedPreferences(ctx)
         val dir = folder(ctx)
+        keepLastLogs(dir)
 
         val settings = File(dir, "settings.cfg")
         if (settings.isFile && prefs.getString(PREF_SETTINGS_STAMP, "") != stamp(settings)) {
@@ -135,7 +154,7 @@ object MomwList {
         return editor
     }
 
-    private fun stamp(file: File) = "${file.length()}:${file.lastModified()}:h1"
+    private fun stamp(file: File) = "${file.length()}:${file.lastModified()}:h2"
 
     /** [base] with every key of [list] set, section by section, except [skippedSettings]. */
     private fun merge(base: List<String>, list: List<String>): String {

@@ -38,6 +38,7 @@ import org.libsdl.app.SDLActivity
 
 import constants.Constants
 import cursor.MouseCursor
+import mods.MomwList
 import parser.CommandlineParser
 import ui.controls.Osc
 
@@ -119,7 +120,11 @@ class GameActivity : SDLActivity() {
             e.printStackTrace()
         }
 
-        val textureShrinkingOption = prefs!!.getString("pref_textureShrinking_v2", "")
+        var textureShrinkingOption = prefs!!.getString("pref_textureShrinking_v2", "")
+        // Mali has no DXT, so gl4es unpacks every texture to RGBA; a mod list's HD packs then
+        // run the GPU out of memory in the first big exterior
+        if (textureShrinkingOption.isNullOrEmpty() && MomwList.cfg(this) != null) textureShrinkingOption = "large"
+        if (textureShrinkingOption == "large") Os.setenv("LIBGL_SHRINK", "10", true)
         if (textureShrinkingOption == "low") Os.setenv("LIBGL_SHRINK", "2", true)
         if (textureShrinkingOption == "medium") Os.setenv("LIBGL_SHRINK", "7", true)
         if (textureShrinkingOption == "high") Os.setenv("LIBGL_SHRINK", "6", true)

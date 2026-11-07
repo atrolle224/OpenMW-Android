@@ -154,6 +154,7 @@
     </string-array>
     <string-array name="pref_textureShrinking_entries">
         <item>Ingen</item>
+        <item>Bara stora texturer (standard med modlista)</item>
         <item>Låg</item>
         <item>Medel</item>
         <item>Hög</item>

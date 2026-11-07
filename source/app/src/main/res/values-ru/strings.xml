@@ -154,6 +154,7 @@
     </string-array>
     <string-array name="pref_textureShrinking_entries">
         <item>Нет</item>
+        <item>Только большие текстуры (по умолчанию со списком модов)</item>
         <item>Низкое</item>
         <item>Среднее</item>
         <item>Высокое</item>

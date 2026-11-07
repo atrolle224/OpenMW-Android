@@ -154,6 +154,7 @@
     </string-array>
     <string-array name="pref_textureShrinking_entries">
         <item>Aucune</item>
+        <item>Grandes textures seulement (par défaut avec une liste de mods)</item>
         <item>Faible</item>
         <item>Moyenne</item>
         <item>Élevée</item>
