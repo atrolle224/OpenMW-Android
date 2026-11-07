@@ -122,8 +122,9 @@ class GameActivity : SDLActivity() {
 
         var textureShrinkingOption = prefs!!.getString("pref_textureShrinking_v2", "")
         // Mali has no DXT, so gl4es unpacks every texture to RGBA; a mod list's HD packs then
-        // run the GPU out of memory in the first big exterior
-        if (textureShrinkingOption.isNullOrEmpty() && MomwList.cfg(this) != null) textureShrinkingOption = "large"
+        // run the GPU out of memory in the first big exterior, unless the PC already shrank them
+        if (textureShrinkingOption.isNullOrEmpty() && MomwList.cfg(this) != null && !MomwList.isLowRes(this))
+            textureShrinkingOption = "large"
         if (textureShrinkingOption == "large") Os.setenv("LIBGL_SHRINK", "10", true)
         if (textureShrinkingOption == "low") Os.setenv("LIBGL_SHRINK", "2", true)
         if (textureShrinkingOption == "medium") Os.setenv("LIBGL_SHRINK", "7", true)

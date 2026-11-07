@@ -66,6 +66,9 @@ object MomwList {
         return if (on) file else null
     }
 
+    /** True when RG477M-Morrowind-LowRes.ps1 has already shrunk the list's textures. */
+    fun isLowRes(ctx: Context): Boolean = File(folder(ctx), "lowres.txt").isFile
+
     /** The list's load order lines, as in its openmw.cfg. */
     fun lines(file: File): List<String> =
         file.readLines().map { it.trim() }.filter { cfgKeys.contains(it.substringBefore('=', "").trim()) }
