@@ -27,6 +27,7 @@ import android.app.PendingIntent
 import android.app.ProgressDialog
 import android.content.*
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.system.ErrnoException
@@ -36,6 +37,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import android.util.Log
+import android.view.InputDevice
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
@@ -160,6 +162,7 @@ class MainActivity : AppCompatActivity() {
         migrateOpenMw050SettingsPreferences()
         migrateOpenMw051SettingsPreferences()
         migrateOpenMw051GroundcoverPreferences()
+        migrateRg477mControllerDefaults()
 
         if(launcherThemePreference == 0) AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
         else if(launcherThemePreference == 1) AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
@@ -1953,6 +1956,30 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+
+    /**
+     * RG477M build: once, on a device with built-in or connected controls, turn on handheld
+     * mode, controller menus and tooltips and lighter trigger thresholds.
+     */
+    private fun migrateRg477mControllerDefaults() {
+        val migrationKey = "migration_rg477m_controller_v1"
+        if (prefs.getBoolean(migrationKey, false)) {
+            return
+        }
+        val gamepad = InputDevice.getDeviceIds().any { id ->
+            val device = InputDevice.getDevice(id)
+            device != null && !device.isVirtual &&
+                (device.sources and InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD
+        }
+        val editor = prefs.edit().putBoolean(migrationKey, true)
+        if (gamepad || Build.MODEL.contains("477")) {
+            editor.putBoolean(Constants.HANDHELD_MODE, true)
+                .putBoolean("pref_omw050_controller_menus", true)
+                .putBoolean("pref_omw050_controller_tooltips", true)
+                .putString("pref_omw051_controller_trigger_thresholds", "24576,20480")
+        }
+        editor.apply()
+    }
 
     /**
      * OPENMW_ANDROID_051_LAUNCHER_AUDIT_V1
