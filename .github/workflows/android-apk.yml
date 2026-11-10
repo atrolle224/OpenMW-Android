@@ -41,8 +41,7 @@ jobs:
             source/buildscripts/toolchain
             source/buildscripts/build
             source/buildscripts/prefix
-          key: native-arm64-${{ hashFiles('source/buildscripts/CMakeLists.txt', 'source/buildscripts/patches/**', 'source/buildscripts/include/**', 'source/buildscripts/build.sh') }}
-          restore-keys: native-arm64-
+          key: native-upstream-0.51.0-14-arm64-${{ hashFiles('source/buildscripts/CMakeLists.txt', 'source/buildscripts/patches/**', 'source/buildscripts/include/**', 'source/buildscripts/build.sh') }}
 
       - name: Native engine (arm64)
         working-directory: source/buildscripts

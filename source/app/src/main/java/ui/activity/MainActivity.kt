@@ -124,8 +124,6 @@ class MainActivity : AppCompatActivity() {
 
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
         migrateRetiredShaderSelection()
-        // RG477M build: game folder, load order, resolution and refresh rate defaults
-        preset.Rg477mPreset.apply(this, prefs)
 
         // Only a fresh app launch may auto-skip. Activity recreation while the
         // launcher is already open must never unexpectedly start the game.
@@ -309,11 +307,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-
-        // The game folder default needs the storage permission, which the first launch
-        // only gets after its dialog: apply what is still unset each time we come back.
-        if (::prefs.isInitialized)
-            preset.Rg477mPreset.apply(this, prefs)
 
         // Migrate the legacy /storage/emulated/0/omw user tree after the
         // Activity has had a chance to request legacy game-file storage
@@ -2494,7 +2487,7 @@ class MainActivity : AppCompatActivity() {
 
 			// Visuals graphics
                         //"antialiasing" to prefs.getString("gs_antialiasing", "0").toString(),
-                        "framerate limit" to preset.Rg477mPreset.frameLimit(this@MainActivity, prefs),
+                        "framerate limit" to prefs.getString("gs_framerate_limit", "60").toString(),
 
 			// Visuals shaders
                         "auto use object normal maps" to if(prefs.getBoolean("gs_auto_use_object_normal_maps", false)) "true" else "false",

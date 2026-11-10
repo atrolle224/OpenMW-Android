@@ -249,14 +249,6 @@ class GameActivity : SDLActivity() {
             .getBoolean(Constants.HANDHELD_MODE, false)
         super.onCreate(savedInstanceState)
 
-        // RG477M build: the display mode chosen in Settings (default: its highest
-        // refresh rate, 120 Hz on the RG477M), before the game's surface is made.
-        preset.Rg477mPreset.applyRefreshRate(
-            this,
-            PreferenceManager.getDefaultSharedPreferences(this)
-                .getString(preset.Rg477mPreset.PREF_REFRESH_RATE, "max")
-        )
-
         // The Android keyboard overlays the game. Resizing the surface for the
         // IME would restart the frame and drop the current session.
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)

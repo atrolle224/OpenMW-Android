@@ -68,15 +68,6 @@ class ModsCollection(
      * Also checks to make sure only installed mods are inserted.
      */
     private fun initDb() {
-        // This build's default load order (assets/rg477m/load_order.txt): every plugin and
-        // archive it lists that is installed, enabled, in its order. Files it does not list
-        // are appended disabled by syncWithFs, as before.
-        val bundled = preset.Rg477mPreset.order(db.appContext)
-        if (bundled != null) {
-            initDbMods(bundled.plugins, ModType.Plugin)
-            initDbMods(bundled.archives, ModType.Resource)
-            return
-        }
         val builtIn = arrayOf("Morrowind", "Tribunal", "Bloodmoon")
         initDbMods(builtIn.map { "$it.esm" }, ModType.Plugin)
         initDbMods(builtIn.map { "$it.bsa" }, ModType.Resource)
@@ -87,19 +78,18 @@ class ModsCollection(
      * All of the built-in mods will be enabled by default.
      */
     private fun initDbMods(files: List<String>, type: ModType) {
-        // The list's order across all data directories (not directory by directory), each
-        // file once; the on-disk spelling is stored, which is what syncWithFs matches.
         var order = 0
         val database = db.writableDatabase
-        val seen = mutableSetOf<String>()
-        val listings = dataFiles.map { dir -> File(dir).listFiles()?.filter { it.isFile }.orEmpty() }
-        files.forEach { name ->
-            val found = listings.asSequence().flatten().firstOrNull { it.name == name }
-                ?: listings.asSequence().flatten().firstOrNull { it.name.equals(name, ignoreCase = true) }
-            if (found != null && seen.add(found.name.lowercase(Locale.ROOT))) {
-                order += 1
-                Mod(type, found.name, order, true).insert(database)
-            }
+
+        dataFiles.forEach { dataPath ->
+            files
+                .map { File(dataPath, it) }
+                .filter { it.exists() }
+                .map {
+                    order += 1
+                    Mod(type, it.name, order, true)
+                }
+                .forEach { it.insert(database) }
         }
     }
 
@@ -155,19 +145,7 @@ class ModsCollection(
                 blacklist.add("Siege at Firemoth.esp")
             }
 
-            // RG477M build: the Groundcovers tab only offers files that can be groundcover.
-            // Masters, scripts and the bundled load order's regular plugins (none of them is
-            // grass) stay off it, so they cannot be loaded a second time as groundcover.
-            val notGroundcover = if (type == ModType.Groundcover)
-                preset.Rg477mPreset.order(db.appContext)?.plugins
-                    ?.mapTo(mutableSetOf()) { it.lowercase(Locale.ROOT) }.orEmpty()
-            else emptySet()
-
             modFiles?.forEach {
-                if (type == ModType.Groundcover && (
-                        it.extension.lowercase(Locale.ROOT) in setOf("esm", "omwscripts", "omwgame") ||
-                        it.name.lowercase(Locale.ROOT) in notGroundcover))
-                    return@forEach
                 if (!blacklist.contains(it.name)) {
                     fsNames.add(it.name)
                 }

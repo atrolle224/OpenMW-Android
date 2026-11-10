@@ -25,9 +25,6 @@ import android.database.sqlite.SQLiteOpenHelper
 class ModsDatabaseOpenHelper private constructor(ctx: Context) :
     SQLiteOpenHelper(ctx, DATABASE_NAME, null, DATABASE_VERSION) {
 
-    /** For the bundled default load order (preset.Rg477mPreset), read by ModsCollection. */
-    val appContext: Context = ctx.applicationContext
-
     companion object {
         private const val DATABASE_NAME = "ModsDatabase"
         private const val DATABASE_VERSION = 1
