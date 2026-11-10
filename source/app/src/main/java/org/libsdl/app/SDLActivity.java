@@ -1581,6 +1581,10 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
                 EngineCursor.setVisible(false);
             }
         }
+        if ((down || up) && event.getRepeatCount() == 0
+                && SDLControllerManager.handleTriggerKey(pad, keyCode, down)) {
+            return true;
+        }
         if (down) {
             return SDLControllerManager.onNativePadDown(pad, keyCode) == 0 || stick;
         }
@@ -2475,6 +2479,10 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
             }
         } else if (SDLControllerManager.isDeviceSDLJoystick(deviceId)) {
             // Note that we process events with specific key codes here
+            if (event.getRepeatCount() == 0 && SDLControllerManager.handleTriggerKey(deviceId, keyCode,
+                    event.getAction() == KeyEvent.ACTION_DOWN)) {
+                return true;
+            }
             if (event.getAction() == KeyEvent.ACTION_DOWN) {
                 if (SDLControllerManager.onNativePadDown(deviceId, keyCode) == 0) {
                     return true;

@@ -66,6 +66,11 @@ public class SDLControllerManager
     /**
      * This method is called by SDL using JNI.
      */
+    /** L2/R2 sent as keys (pads without trigger axes) move the triggers SDL is given. */
+    public static boolean handleTriggerKey(int device_id, int keyCode, boolean down) {
+        return mJoystickHandler.handleTriggerKey(device_id, keyCode, down);
+    }
+
     public static void pollInputDevices() {
         mJoystickHandler.pollInputDevices();
     }
@@ -134,6 +139,10 @@ class SDLJoystickHandler {
         return false;
     }
 
+    public boolean handleTriggerKey(int device_id, int keyCode, boolean down) {
+        return false;
+    }
+
     /**
      * Handles adding and removing of input devices.
      */
@@ -150,6 +159,60 @@ class SDLJoystickHandler_API16 extends SDLJoystickHandler {
         public String desc;
         public ArrayList<InputDevice.MotionRange> axes;
         public ArrayList<InputDevice.MotionRange> hats;
+        public boolean keyTriggers;
+    }
+
+    static final int LEFT_TRIGGER = 4;
+    static final int RIGHT_TRIGGER = 5;
+
+    private static InputDevice.MotionRange take(List<InputDevice.MotionRange> ranges, int... axes) {
+        for (int axis : axes) {
+            for (InputDevice.MotionRange range : ranges) {
+                if (range.getAxis() == axis) {
+                    ranges.remove(range);
+                    return range;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static boolean has(List<InputDevice.MotionRange> ranges, int axis) {
+        for (InputDevice.MotionRange range : ranges) {
+            if (range.getAxis() == axis) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * SDL's generic mapping reads the sticks as axes 0-3 and the triggers as 4-5,
+     * so they are put in that order whatever the pad reports (Z/RZ or RX/RY for
+     * the right stick, LTRIGGER/RTRIGGER, BRAKE/GAS or Z/RZ for the triggers).
+     * A missing trigger stays in its place (null) and its L2/R2 key moves it.
+     */
+    private static ArrayList<InputDevice.MotionRange> canonicalAxes(List<InputDevice.MotionRange> joystickRanges) {
+        ArrayList<InputDevice.MotionRange> ranges = new ArrayList<InputDevice.MotionRange>(joystickRanges);
+        boolean rxStick = has(ranges, MotionEvent.AXIS_RX) && has(ranges, MotionEvent.AXIS_RY);
+        boolean namedTriggers = has(ranges, MotionEvent.AXIS_LTRIGGER) || has(ranges, MotionEvent.AXIS_BRAKE);
+        ArrayList<InputDevice.MotionRange> axes = new ArrayList<InputDevice.MotionRange>();
+        axes.add(take(ranges, MotionEvent.AXIS_X));
+        axes.add(take(ranges, MotionEvent.AXIS_Y));
+        if (rxStick && !namedTriggers) {
+            axes.add(take(ranges, MotionEvent.AXIS_RX));
+            axes.add(take(ranges, MotionEvent.AXIS_RY));
+            axes.add(take(ranges, MotionEvent.AXIS_Z));
+            axes.add(take(ranges, MotionEvent.AXIS_RZ));
+        } else {
+            axes.add(take(ranges, MotionEvent.AXIS_Z, MotionEvent.AXIS_RX));
+            axes.add(take(ranges, MotionEvent.AXIS_RZ, MotionEvent.AXIS_RY));
+            axes.add(take(ranges, MotionEvent.AXIS_LTRIGGER, MotionEvent.AXIS_BRAKE));
+            axes.add(take(ranges, MotionEvent.AXIS_RTRIGGER, MotionEvent.AXIS_GAS));
+        }
+        Collections.sort(ranges, new RangeComparator());
+        axes.addAll(ranges);
+        return axes;
     }
     static class RangeComparator implements Comparator<InputDevice.MotionRange> {
         @Override
@@ -197,20 +260,39 @@ class SDLJoystickHandler_API16 extends SDLJoystickHandler {
 
                     List<InputDevice.MotionRange> ranges = joystickDevice.getMotionRanges();
                     Collections.sort(ranges, new RangeComparator());
+                    ArrayList<InputDevice.MotionRange> sticks = new ArrayList<InputDevice.MotionRange>();
                     for (InputDevice.MotionRange range : ranges) {
                         if ((range.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) != 0) {
                             if (range.getAxis() == MotionEvent.AXIS_HAT_X || range.getAxis() == MotionEvent.AXIS_HAT_Y) {
                                 joystick.hats.add(range);
                             } else {
-                                joystick.axes.add(range);
+                                sticks.add(range);
                             }
                         }
                     }
+                    boolean gamepad = (joystickDevice.getSources() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD;
+                    int vendor = getVendorId(joystickDevice);
+                    int product = getProductId(joystickDevice);
+                    if (gamepad && sticks.size() >= 2) {
+                        joystick.axes = canonicalAxes(sticks);
+                        joystick.keyTriggers = joystick.axes.get(LEFT_TRIGGER) == null || joystick.axes.get(RIGHT_TRIGGER) == null;
+                        // no database entry for its ids: SDL's generic mapping, sticks a0-a3, triggers a4-a5
+                        vendor = 0;
+                        product = 0;
+                    } else {
+                        joystick.axes = sticks;
+                    }
+                    describe(joystickDevice, joystick);
 
                     mJoysticks.add(joystick);
                     SDLControllerManager.nativeAddJoystick(joystick.device_id, joystick.name, joystick.desc,
-                            getVendorId(joystickDevice), getProductId(joystickDevice), false,
+                            vendor, product, false,
                             getButtonMask(joystickDevice), joystick.axes.size(), joystick.hats.size()/2, 0);
+                    if (gamepad && joystick.axes.size() > RIGHT_TRIGGER) {
+                        // SDL starts an axis at its middle, half a trigger press
+                        SDLControllerManager.onNativeJoy(joystick.device_id, LEFT_TRIGGER, -1.0f);
+                        SDLControllerManager.onNativeJoy(joystick.device_id, RIGHT_TRIGGER, -1.0f);
+                    }
                 }
             }
         }
@@ -262,6 +344,9 @@ class SDLJoystickHandler_API16 extends SDLJoystickHandler {
             if (joystick != null) {
                 for (int i = 0; i < joystick.axes.size(); i++) {
                     InputDevice.MotionRange range = joystick.axes.get(i);
+                    if (range == null) {
+                        continue;
+                    }
                     /* Normalize the value to -1...1 */
                     float value = (event.getAxisValue(range.getAxis(), actionPointerIndex) - range.getMin()) / range.getRange() * 2.0f - 1.0f;
                     SDLControllerManager.onNativeJoy(joystick.device_id, i, value);
@@ -274,6 +359,52 @@ class SDLJoystickHandler_API16 extends SDLJoystickHandler {
             }
         }
         return true;
+    }
+
+    @Override
+    public boolean handleTriggerKey(int device_id, int keyCode, boolean down) {
+        if (keyCode != KeyEvent.KEYCODE_BUTTON_L2 && keyCode != KeyEvent.KEYCODE_BUTTON_R2) {
+            return false;
+        }
+        SDLJoystick joystick = getJoystick(device_id);
+        if (joystick == null || joystick.axes.size() <= RIGHT_TRIGGER) {
+            return false;
+        }
+        int axis = keyCode == KeyEvent.KEYCODE_BUTTON_L2 ? LEFT_TRIGGER : RIGHT_TRIGGER;
+        // a pad with a trigger axis as well sends both; the axis is the one used
+        if (joystick.axes.get(axis) != null) {
+            return true;
+        }
+        SDLControllerManager.onNativeJoy(device_id, axis, down ? 1.0f : -1.0f);
+        return true;
+    }
+
+    /** What the pad reports, for momw/logs/controller.txt (a 477M's controls can't be read otherwise). */
+    private static void describe(InputDevice device, SDLJoystick joystick) {
+        StringBuilder text = new StringBuilder();
+        text.append(device.getName()).append("  vendor ").append(String.format("%04x", device.getVendorId()))
+            .append(" product ").append(String.format("%04x", device.getProductId())).append('\n');
+        text.append("reported axes:");
+        for (InputDevice.MotionRange range : device.getMotionRanges()) {
+            text.append(' ').append(MotionEvent.axisToString(range.getAxis()))
+                .append('[').append(range.getMin()).append(',').append(range.getMax()).append(']');
+        }
+        text.append("\ngiven to SDL:");
+        for (InputDevice.MotionRange range : joystick.axes) {
+            text.append(' ').append(range == null ? "(L2/R2 key)" : MotionEvent.axisToString(range.getAxis()));
+        }
+        text.append("\nhats: ").append(joystick.hats.size() / 2).append('\n');
+        boolean[] keys = device.hasKeys(KeyEvent.KEYCODE_BUTTON_L1, KeyEvent.KEYCODE_BUTTON_R1,
+            KeyEvent.KEYCODE_BUTTON_L2, KeyEvent.KEYCODE_BUTTON_R2, KeyEvent.KEYCODE_BUTTON_SELECT, KeyEvent.KEYCODE_BACK);
+        text.append("keys L1 R1 L2 R2 Select Back: ").append(java.util.Arrays.toString(keys)).append("\n\n");
+        Log.i("SDLControllerManager", text.toString());
+        java.io.File logs = new java.io.File("/storage/emulated/0/Documents/Morrowind Android/momw/logs");
+        if (logs.isDirectory()) {
+            try (java.io.FileWriter out = new java.io.FileWriter(new java.io.File(logs, "controller.txt"), true)) {
+                out.write(text.toString());
+            } catch (java.io.IOException ignored) {
+            }
+        }
     }
 
     public String getJoystickDescriptor(InputDevice joystickDevice) {
