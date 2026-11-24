@@ -94,6 +94,22 @@ PLAYER: scripts/omw/radialmenu/player.lua
         }
     }
 
+    /**
+     * Clears every controller binding, so OpenMW binds its defaults on the next start; with
+     * [handheld], Journal and Rest are put where Handheld mode has them.
+     */
+    fun resetControllerBindings(handheld: Boolean) {
+        editBindings { text ->
+            Log.i(TAG, "Controller bindings reset")
+            val cleared = Regex("""\s*<Joystick\w*Binder[^>]*/>""").replace(text, "")
+            if (handheld) {
+                setControlButton(setControlButton(cleared, A_JOURNAL, BUTTON_RIGHTSHOULDER), A_REST, BUTTON_BACK)
+            } else {
+                cleared
+            }
+        }
+    }
+
     private fun editBindings(edit: (String) -> String?) {
         val file = File(Constants.USER_CONFIG, "input_v3.xml")
         if (!file.isFile) {

@@ -161,6 +161,7 @@ class MainActivity : AppCompatActivity() {
         migrateOpenMw051SettingsPreferences()
         migrateOpenMw051GroundcoverPreferences()
         migrateRg477mControllerDefaults()
+        migrateRg477mControllerReset()
 
         if(launcherThemePreference == 0) AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
         else if(launcherThemePreference == 1) AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
@@ -1954,6 +1955,22 @@ class MainActivity : AppCompatActivity() {
      * RG477M build: once, on a device with built-in or connected controls, turn on handheld
      * mode, controller menus and tooltips and lighter trigger thresholds.
      */
+    /** RG477M build: once, back to Handheld mode and the default controller buttons. */
+    private fun migrateRg477mControllerReset() {
+        val migrationKey = "migration_rg477m_controller_reset_v1"
+        if (prefs.getBoolean(migrationKey, false)) {
+            return
+        }
+        prefs.edit()
+            .putBoolean(migrationKey, true)
+            .putBoolean(Constants.HANDHELD_MODE, true)
+            .putBoolean("pref_omw050_controller_menus", true)
+            .putBoolean("pref_omw050_controller_tooltips", true)
+            .putString("pref_omw051_controller_trigger_thresholds", "24576,20480")
+            .apply()
+        HandheldController.resetControllerBindings(true)
+    }
+
     private fun migrateRg477mControllerDefaults() {
         val migrationKey = "migration_rg477m_controller_v1"
         if (prefs.getBoolean(migrationKey, false)) {
